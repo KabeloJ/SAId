@@ -1,0 +1,59 @@
+﻿@page "/Application/History"
+@using Core.IdApplication.Application
+@using Core.AccountDetails.Models
+@using System.Security.Claims
+@inject AuthenticationStateProvider _provider
+@inject IIdApplicationServices _services
+@inject NavigationManager _nav
+@attribute [Authorize]
+
+<div class="p-2 m-2">
+    <div>
+        <h4>Applications History</h4>
+        <hr />
+    </div>
+    <div class="shadow">
+        <table class="table table-responsive">
+            <thead>
+                <tr>
+                    <th>Names</th>
+                    <th>Id Number</th>
+                    <th>Application Type</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Models != null)
+                {
+                    foreach (var item in Models)
+                    {
+                        <tr>
+                            <td>@item.FirstNames @item.Surname</td>
+                            <td>@item.IdNumber</td>
+                            <td>@item.FormExt?.ApplicationType</td>
+                            <td><button type="button" class="btn btn-sm btn-info text-white" @onclick="@(()=>_nav.NavigateTo($"/Application/View/{item.Id}", true))">View</button></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+@code {
+    public List<AccountDetailsModel> Models { get; set; }
+    public string UserId { get; set; }
+
+    public bool Loading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loading = true;
+        var auth = await _provider.GetAuthenticationStateAsync();
+        UserId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        Models = _services.GetBySubmitter(UserId);
+
+        Loading = false;
+    }
+}

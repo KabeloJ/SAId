@@ -1,0 +1,108 @@
+﻿@page "/Application/View/{Id}"
+@using System.Security.Claims
+@using Core.IdApplication.Application
+@using Core.AccountDetails.Models
+@using Core.Document.Models
+@using Core.Document.Application
+@inject AuthenticationStateProvider _provider
+@inject IIdApplicationServices _services
+@inject IDocumentServices _docs
+
+<div>
+    @if (!Loading)
+    {
+        @if (Model != null)
+        {
+            <section>
+                <h5>Application Status : @Model.ApplicationStatus</h5>
+            </section>
+            <div align="center">
+                @if (DocModels != null)
+                {
+                    if (DocModels.Where(x => x.Profile == true).Count() > 0)
+                    {
+                        <div class="col-auto">
+                            <img src="/Download/@DocModels.Where(x => x.Profile == true).FirstOrDefault()?.Id" alt="@DocModels.Where(x => x.Profile == true).FirstOrDefault()?.FileName" width="50%" height="50%" />
+                        </div>
+                    }
+                }
+            </div>
+            <div class="row">
+                <div class="col-md-1"></div>
+                <section id="ApplicationForm" class="card p-2 col-md-10">
+                    <SAId.Web.Pages.Partials.Application._Form Model="@Model" UserId="@UserId" ApplyingForSomeone="false" ViewOnly="true" />
+                </section>
+                <div class="col-md-1"></div>
+            </div>
+            @if (DocModels != null)
+            {
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <section id="Documents" class="card p-2 col-md-10">
+                        <div class="bg-secondary p-2 text-white" style="border-radius:2px">
+                            <h6><b>Documents</b></h6>
+                        </div>
+                        <div class="overflow-auto">
+                            <table class="table table-borderless table-sm small table-striped">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>File Title</th>
+                                        <th>File Name</th>
+                                        <th>Preview</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr></tr>
+                                    @foreach (var doc in DocModels.Where(x => x.Profile == null || x.Profile == false))
+                                    {
+                                        <tr>
+                                            <td>@doc.Title</td>
+                                            <td align="left"><a href="/Download/@doc.Id" class="text-primary" title="Download @doc.FileName">@doc.FileName</a></td>
+                                            <td>
+                                                <a class="btn btn-sm btn-info text-white" href="/Download/@doc.Id">Download</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    <div class="col-md-1"></div>
+                </div>
+            }
+        }
+        else
+        {
+            <p>
+                There is nothing on this address
+                <br />
+                <a href="/" title="Home Page">Go To Home</a>
+            </p>
+        }
+    }
+    else
+    {
+        <p>Loading...</p>
+    }
+</div>
+
+
+@code {
+    [Parameter] public string Id { get; set; }
+    public string UserId { get; set; }
+    public List<DocumentModel> DocModels { get; set; }
+    public DocumentModel PreviewItem { get; set; }
+    public AccountDetailsModel Model { get; set; }
+    public bool Loading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loading = true;
+        var auth = await _provider.GetAuthenticationStateAsync();
+        UserId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        Model = _services.GetById(Id);
+        DocModels = _docs.GetByApplicationId(Id);
+        Loading = false;
+    }
+
+}

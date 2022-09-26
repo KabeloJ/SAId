@@ -1,0 +1,515 @@
+﻿@using Core.AccountDetails.Models
+@using Core.AccountDetails.Application
+@using System.Security.Claims
+@inject IAccountDetailsServices _services
+
+        @if (Loading)
+        {
+            <p>LOADING...</p>
+        }
+        else
+        {
+
+            @if (Model != null)
+            {
+                if (ViewOnly)
+                {
+                        <div class="bg-secondary p-2 text-white" style="border-radius:2px">
+                            <h6>Personal Details</h6>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="form-group col-md-6">
+                                <label class="text-black-50">Firstnames</label>
+                                <br />
+                                <p>@Model.FirstNames</p>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="text-black-50">Surname</label>
+                                <br />
+                                <p>@Model.Surname</p>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="form-group col-md-6">
+                                <label class="text-black-50">Maiden Name</label>
+                                <br />
+                                <p>@Model.MaidenName</p>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="text-black-50">Initials</label>
+                                <br />
+                                <p>@Model.Initials</p>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="form-group col-md-6">
+                                <label class="text-black-50">Nationality</label>
+                                <br />
+                                <p>@Model.Nationality</p>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="text-black-50">Is User SA Citizen?</label>
+                                <br />
+                                @if (Model.IsSacitizen == true)
+                                {
+                                    <p>Yes</p>
+                                }
+                                else
+                                {
+                                    <p>No</p>
+                                }
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="form-group col-md-6">
+                                <label class="text-black-50">Country Of Birth</label>
+                                <br />
+                                <p>@Model.CountryOfBirth</p>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="text-black-50">Id Number / Passport</label>
+                                <br />
+                                <p>@Model.IdNumber</p>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="form-group col-md-6">
+                                <label class="text-black-50">Date Of Birth</label>
+                                <br />
+                                @if (@Model.DateOfBirth != null)
+                                {
+                                    <p>@Model.DateOfBirth.Value.ToShortDateString()</p>
+                                }
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="text-black-50">Gender</label>
+                                <br />
+                                <p>@Model.Gender</p>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="form-group col-md-6">
+                                <label class="text-black-50">Marital Status</label>
+                                <br />
+                                <p>@Model.MaritalStatus</p>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="text-black-50">Place of Birth</label>
+                                <br />
+                                <p>@Model.PlaceOfBirth</p>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="bg-secondary p-2 text-white" style="border-radius:2px">
+                                <h6>Contact Details</h6>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="form-group col-md-6">
+                                    <label class="text-black-50">Cell Number</label>
+                                    <br />
+                                    <p>@Model.CellNo</p>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label class="text-black-50">Home Tel</label>
+                                    <br />
+                                    <p>@Model.CellNo</p>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="form-group col-md-6">
+                                    <label class="text-black-50">Email Address</label>
+                                    <br />
+                                    <p>@Model.EmailAddress</p>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label class="text-black-50">Work Tel</label>
+                                    <br />
+                                    <p>@Model.WorkTelNo</p>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="mt-2">
+                            <div class="bg-secondary p-2 text-white" style="border-radius:2px">
+                                <h6>Physical Address</h6>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="form-group col-md-6">
+                                    <label class="text-black-50">Unit Number</label>
+                                    <br />
+                                    <p>@Model.PhysicalUnitNumber</p>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label class="text-black-50">Complex</label>
+                                    <br />
+                                    <p>@Model.PhysicalComplex</p>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="form-group col-md-6">
+                                    <label class="text-black-50">Street Number</label>
+                                    <br />
+                                    <p>@Model.PhysicalStreetNumber</p>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label class="text-black-50">Complex</label>
+                                    <br />
+                                    <p>@Model.PhysicalStreetName</p>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="form-group col-md-6">
+                                    <label class="text-black-50">Suburb</label>
+                                    <br />
+                                    <p>@Model.PhysicalSuburb</p>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label class="text-black-50">City</label>
+                                    <br />
+                                    <p>@Model.PhysicalCity</p>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="text-black-50">Postal Code</label>
+                                <p>@Model.PhysicalPostalCode</p>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="mt-2">
+                            <div class="bg-secondary p-2 text-white" style="border-radius:2px">
+                                <h6>Postal Address</h6>
+                            </div>
+                            @if (!Model.isPostalAddressSameAsPhysical)
+                            {
+                                <div class="row mt-2">
+                                    <div class="form-group col-md-6">
+                                        <label class="text-black-50">Unit Number</label>
+                                        <br />
+                                        <p>@Model.PostalUnitNumber</p>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label class="text-black-50">Complex</label>
+                                        <br />
+                                        <p>@Model.PostalComplex</p>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="form-group col-md-6">
+                                        <label class="text-black-50">Street Number & Name</label>
+                                        <br />
+                                        <p>@Model.PostalStreetNumber</p>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label class="text-black-50">Suburb</label>
+                                        <br />
+                                        <p>@Model.PostalSuburb</p>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="form-group col-md-6">
+                                        <label class="text-black-50">City</label>
+                                        <br />
+                                        <p>@Model.PostalCity</p>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label class="text-black-50">Postal Code</label>
+                                        <br />
+                                        <p>@Model.PostalPostalCode</p>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="text-black-50">Country Code</label>
+                                    <p>@Model.PostalCountryCode</p>
+                                </div>
+
+                            }
+                            else
+                            {
+                                <div class="form-check">
+                                    <label>Postal address is the same as physical address</label>
+                                </div>
+                            }
+                        </div>
+                }
+                else
+                {
+                    <h4>Personal Details</h4>
+                    <hr />
+
+                    <EditForm Model="Model" OnValidSubmit="SubmitThisForm">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-group">
+                            <label>Firstnames</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.FirstNames)" />
+                            <input type="text" class="form-control" @bind="Model.FirstNames" />
+                        </div>
+                        <div class="form-group">
+                            <label>Surname</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.Surname)" />
+                            <input type="text" class="form-control" @bind="Model.Surname" />
+                        </div>
+                        <div class="form-group">
+                            <label>Maiden Name</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.MaidenName)" />
+                            <input type="text" class="form-control" @bind="Model.MaidenName" />
+                        </div>
+                        <div class="form-group">
+                            <label>Initials</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.Initials)" />
+                            <input type="text" class="form-control" @bind="Model.Initials" />
+                        </div>
+                        <div class="form-group">
+                            <label>Nationality</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.Nationality)" />
+                            <select @bind="Model.Nationality" class="form-control">
+                                <option>--Select Nationality--</option>
+                                @foreach (var n in Model.Nationalities)
+                                {
+                                    <option value="@n">@n</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-check">
+                            <label>Are you a South African Citizen?</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.IsSacitizen)" />
+                            <input type="radio" @onchange="@(a=>EmployeeCitizen(a, "Yes"))" name="Citizen" id="yes" /><label for="yes">&nbsp;Yes</label>
+                            <input type="radio" @onchange="@(a=>EmployeeCitizen(a, "No"))" name="Citizen" id="no" /><label for="no">&nbsp;No</label>
+                        </div>
+                        @if (Model.Nationality == "South African")
+                        {
+                            <div class="form-group">
+                                <label>RSA Id Number</label>
+                                <br />
+                                <input type="number" class="form-control" @bind="Model.IdNumber" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-group">
+                                <label>Passport / Id</label>
+                                <br />
+                                <input type="text" class="form-control" @bind="Model.IdNumber" />
+                            </div>
+                        }
+                        <div class="form-group">
+                            <label>Country of Birth</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.CountryOfBirth)" />
+                            <select @bind="Model.CountryOfBirth" class="form-control">
+                                <option>--Select Country--</option>
+                                @foreach (var n in Model.Nationalities)
+                                {
+                                    <option value="@n">@n</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.DateOfBirth)" />
+                            <input type="date" class="form-control" @bind="Model.DateOfBirth" />
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.Gender)" />
+                            <select class="form-control" @bind="Model.Gender">
+                                <option>--Select Gender--</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Marital Status</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.MaritalStatus)" />
+                            <select class="form-control" @bind="Model.MaritalStatus">
+                                <option>--Select Marital Status--</option>
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                                <option value="Divorced">Divorced</option>
+                                <option value="Widowered">Widowered</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Places of Birth</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.PlaceOfBirth)" />
+                            <input type="text" class="form-control" @bind="Model.PlaceOfBirth" placeholder="e.g Polokwane town" />
+                        </div>
+                        <div class="form-group">
+                            <label>Cell Number</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.CellNo)" />
+                            <input type="number" class="form-control" @bind="Model.CellNo" />
+                        </div>
+                        <div class="form-group">
+                            <label>Home Tel</label>
+                            <br />
+                            <input type="number" class="form-control" @bind="Model.HomeTelNo" placeholder="Optional" />
+                        </div>
+                        <div class="form-group">
+                            <label>Work Tel</label>
+                            <br />
+                            <input type="number" class="form-control" @bind="Model.WorkTelNo" placeholder="Optional" />
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <br />
+                            <ValidationMessage For="@(()=>Model.EmailAddress)" />
+                            <input type="email" class="form-control" @bind="Model.EmailAddress" />
+                        </div>
+                        <br />
+                        <h5>Physical Address</h5>
+
+                        <div class="form-group">
+                            <label>Unit Number</label>
+                            <input type="text" class="form-control" @bind="Model.PhysicalUnitNumber" placeholder="Optional" />
+                        </div>
+                        <div class="form-group">
+                            <label>Complex</label>
+                            <input type="text" class="form-control" @bind="Model.PhysicalComplex" placeholder="Optional" />
+                        </div>
+                        <div class="form-group">
+                            <label>Street Number</label>
+                            <ValidationMessage For="@(()=>Model.PhysicalStreetNumber)" />
+                            <input type="text" class="form-control" @bind="Model.PhysicalStreetNumber" />
+                        </div>
+                        <div class="form-group">
+                            <label>Street Name</label>
+                            <ValidationMessage For="@(()=>Model.PhysicalStreetName)" />
+                            <input type="text" class="form-control" @bind="Model.PhysicalStreetName" />
+                        </div>
+                        <div class="form-group">
+                            <label>Suburb</label>
+                            <ValidationMessage For="@(()=>Model.PhysicalSuburb)" />
+                            <input type="text" class="form-control" @bind="Model.PhysicalSuburb" />
+                        </div>
+                        <div class="form-group">
+                            <label>City</label>
+                            <ValidationMessage For="@(()=>Model.PhysicalCity)" />
+                            <input type="text" class="form-control" @bind="Model.PhysicalCity" />
+                        </div>
+                        <div class="form-group">
+                            <label>Postal Code</label>
+                            <ValidationMessage For="@(()=>Model.PhysicalPostalCode)" />
+                            <input type="number" class="form-control" @bind="Model.PhysicalPostalCode" />
+                        </div>
+                        <br />
+                        <h5>Postal Address</h5>
+                        <br />
+                        <div class="form-check">
+                            <input type="checkbox" @bind="Model.isPostalAddressSameAsPhysical" id="postalAddress" /><label for="postalAddress">&nbsp;&nbsp;Postal address is the same as physical address</label>
+                        </div>
+                        @if (!Model.isPostalAddressSameAsPhysical)
+                        {
+                            <div class="form-group">
+                                <label>Unit Number</label>
+                                <input type="text" class="form-control" @bind="Model.PostalUnitNumber" placeholder="Optional" />
+                            </div>
+                            <div class="form-group">
+                                <label>Complex</label>
+                                <input type="text" class="form-control" @bind="Model.PostalComplex" placeholder="Optional" />
+                            </div>
+                            <div class="form-group">
+                                <label>Street Number & Name</label>
+                                <input type="text" class="form-control" @bind="Model.PostalStreetNumber" />
+                            </div>
+                            <div class="form-group">
+                                <label>Suburb</label>
+                                <input type="text" class="form-control" @bind="Model.PostalSuburb" />
+                            </div>
+                            <div class="form-group">
+                                <label>City</label>
+                                <input type="text" class="form-control" @bind="Model.PostalCity" />
+                            </div>
+                            <div class="form-group">
+                                <label>Postal Code</label>
+                                <input type="number" class="form-control" @bind="Model.PostalPostalCode" />
+                            </div>
+                            <div class="form-group">
+                                <label>Country Code</label>
+                                <input type="text" class="form-control" @bind="Model.PostalCountryCode" />
+                            </div>
+                        }
+                        <ValidationSummary />
+                        @if (Model.Errors != null)
+                        {
+                            <ul>
+                                @foreach (var item in Model.Errors)
+                                {
+                                    <li class="text-danger">@item</li>
+                                }
+                            </ul>
+                        }
+                    <div class="form-group">
+                        <br />
+                        @if (Submitting)
+                        {
+                            <button type="button" class="btn btn-primary m-2" disabled>...</button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-primary m-2">@BtnName</button>
+                        }
+                    </div>
+                    </EditForm>
+                }
+            }
+        }
+
+@code {
+    [Parameter] public AccountDetailsModel Model { get; set; }
+    [Parameter] public EventCallback<AccountDetailsModel> SubmitForm { get; set; }
+    [Parameter] public string? BtnName { get; set; }
+    [Parameter] public string? UserId { get; set; }
+    [Parameter] public bool ApplyingForSomeone { get; set; }
+    [Parameter] public bool ViewOnly { get; set; }
+
+    #region Controls
+    public bool Submitting { get; set; }
+    public bool Loading { get; set; }
+
+
+    async Task Wait()
+    {
+        await Task.Delay(200);
+        this.StateHasChanged();
+    }
+    #endregion
+
+    async Task SubmitThisForm()
+    {
+        Submitting = true;
+        await Wait();
+        Model = _services.Save(Model, UserId, ApplyingForSomeone);
+        Submitting = false;
+        if (Model.Errors == null || Model.Errors.Count == 0)
+        {
+            await SubmitForm.InvokeAsync(Model);
+        }
+    }
+
+
+    void EmployeeCitizen(ChangeEventArgs arg, string val)
+    {
+        if (arg != null)
+        {
+            if (val == "Yes")
+            {
+                Model.IsSacitizen = true;
+            }
+            else
+            {
+                Model.IsSacitizen = false;
+            }
+        }
+    }
+}

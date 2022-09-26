@@ -1,0 +1,67 @@
+﻿@page "/AccountDetails/Index/{RedirectUrl?}"
+@using Core.AccountDetails.Models
+@using Core.AccountDetails.Application
+@using System.Security.Claims
+@inject AuthenticationStateProvider _provider
+@inject IAccountDetailsServices _services
+@inject NavigationManager _nav
+
+
+@if (Model != null)
+{
+    <div class="row">
+        <div class="col-md-1"></div>
+        <SAId.Web.Pages.Partials.Application._Form Model="Model" BtnName="Save" SubmitForm="SubmitForm" UserId="@UserId" />
+        <div class="col-md-1"></div>
+    </div>
+}
+
+
+
+@code { [Parameter]
+    public string? RedirectUrl { get; set; }
+    public AccountDetailsModel Model { get; set; }
+    public string UserId { get; set; }
+
+    #region Controls
+    bool Submitting { get; set; }
+    bool Loading { get; set; }
+
+
+    async Task Wait()
+    {
+        await Task.Delay(200);
+        this.StateHasChanged();
+    }
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loading = true;
+        var auth = await _provider.GetAuthenticationStateAsync();
+        UserId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (UserId == null)
+        {
+            _nav.NavigateTo("Identity/Account/Login", true);
+        }
+        var model = _services.Get(UserId);
+        if (model == null)
+        {
+            Model = new AccountDetailsModel() { EmailAddress = auth.User.FindFirstValue(ClaimTypes.Name) };
+        }
+        else
+        {
+            Model = model;
+        }
+        Loading = false;
+    }
+
+    void SubmitForm(AccountDetailsModel model)
+    {
+        Model = model;
+        if (Model.Errors == null || Model.Errors.Count == 0)
+        {
+            _nav.NavigateTo(RedirectUrl ?? "/", true);
+        }
+    }
+}

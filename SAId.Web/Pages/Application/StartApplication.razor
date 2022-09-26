@@ -1,0 +1,447 @@
+﻿@page "/Application/Start"
+@using System.Security.Claims
+@using Core.AccountDetails.Application
+@using Core.AccountDetails.Models
+@using Core.Document.Models
+@using Core.Document.Application
+@using Core.IdApplication.Application
+@inject AuthenticationStateProvider _provider
+@inject IAccountDetailsServices _services
+@inject IDocumentServices _docServices
+@inject IIdApplicationServices _application
+@inject NavigationManager _nav
+
+<div class="p-2 m-2">
+    <h4>Smart ID Application</h4>
+    <hr>
+</div>
+
+<div class="p-2 m-2">
+    <section id="ApplicationType">
+
+        @if (ApplicationType == null)
+        {
+            <div class="row col-md-8">
+                <div class="form-group col-md-5 m-2">
+                    <button type="button" class="btn btn-lg btn-success form-control" @onclick="@(()=>ApplicationType = "First Time Applicant")">First Time Applicant</button>
+                </div>
+                <div class="form-group col-md-5 m-2">
+                    <button type="button" class="btn btn-lg btn-info text-white form-control" @onclick="@(()=>ApplicationType = "Re-Issuing")">Re-Issuing</button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="mb-4" align="center">
+                <h4>@ApplicationType</h4>
+            </div>
+        }
+    </section>
+    @if (ApplicationType != null)
+    {
+        <section id="ApplyingFor">
+            <h5>Who are you applying for?</h5>
+            <div class="row col-md-8">
+                <div class="form-group col-md-6">
+                    <input type="radio" name="ApplyingFor" id="MySelf" @onchange="@(a=>SelectUserType(a, "MySelf"))" /><label for="MySelf">&nbsp;For Myself</label>
+                </div>
+                <div class="form-group col-md-6">
+                    <input type="radio" name="ApplyingFor" id="Someone" @onchange="@(a=>SelectUserType(a ,"Someone"))" /><label for="Someone">&nbsp;For Someone</label>
+                </div>
+            </div>
+            @if (ApplyingFor == "Someone")
+            {
+                <div class="form-group col-md-4 mt-4">
+                    <label>Id Number</label>
+                    <br />
+                    @if (IdNumberErrorMsg != null)
+                    {
+                        <span class="text-danger">@IdNumberErrorMsg</span>
+                    }
+                    <input type="text" @onchange="ApplyerIdNumber" class="form-control" placeholder="Please enter your ID number" />
+                </div>
+            }
+        </section>
+        @if (ShowForm == true && Model != null)
+        {
+            <div class="row">
+                <div class="col-md-1"></div>
+                <section id="ApplicationForm" class="card p-2 col-md-10">
+                    <SAId.Web.Pages.Partials.Application._Form Model="@Model" SubmitForm="GetModel" BtnName="Submit Form" UserId="@UserId" ApplyingForSomeone="@ApplyingForSomeone" ViewOnly="@ViewOnly" />
+                </section>
+                <div class="col-md-1"></div>
+            </div>
+            @if (UserShouldNotApply)
+            {
+                <h5 class="text-danger">Unfortunately, you can only apply when you are 16 years or older.</h5>
+                <button type="button" class="btn btn-sm btn-primary" @onclick="@(()=>_nav.NavigateTo("/", true))">Abandon Application</button>
+            }
+            else
+            {
+
+                @if (PersonalDetailsCaptured && RequiredDocs != null)
+                {
+                    <div class="row mt-2">
+                        <div class="col-md-1"></div>
+                        <section id="Documents" class="card p-2 col-md-10">
+                            <div class="bg-secondary p-2 text-white" style="border-radius:2px">
+                                <h6><b>Documents</b></h6>
+                            </div>
+                            @foreach (var doc in RequiredDocs)
+                            {
+                                <SAId.Web.Pages.Partials.Application._Document DocModel="@doc" Title="@doc.Title" SubmitDocument="GetDocumentFromView" />
+                            }
+                        </section>
+                        <div class="col-md-1"></div>
+                    </div>
+                }
+            }
+        }
+        @if (ShowProfilePic && Selfie != null)
+        {
+                    <div class="row mt-2">
+                        <div class="col-md-1"></div>
+                        <section class="card p-2 col-md-10">
+                            <div class="bg-secondary p-2 text-white" style="border-radius:2px">
+                                <h6><b>Id Photo</b></h6>
+                            </div>
+                            <SAId.Web.Pages.Partials.Application._Document DocModel="@Selfie" Title="@Selfie.Title" SubmitDocument="SaveProfile" />
+                            @if (Selfie.FileName != null)
+                            {
+                                <div class="form-group mt-2">
+                                    <button type="button" class="btn btn-primary form-control" @onclick="SubmitSelfie">Submit</button>
+                                </div>
+                            }
+                        </section>
+                        <div class="col-md-1"></div>
+                    </div>
+        }
+    }
+    @if (ReadyForSubmit && Model != null && Model.Id == null)
+    {
+        <br />
+        @if (Model.ErrorMessage != null)
+        {
+            <p class="text-danger">@Model.ErrorMessage</p>
+        }
+        <div class="form-group">
+            @if (Submitting)
+            {
+
+                <button type="button" class="btn btn-primary form-control" disabled>Sending Application...</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-primary form-control" @onclick="SubmitForm">Send Application</button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    public string? UserId { get; set; }
+    public bool AccountSet { get; set; }
+    public string? ApplyingFor { get; set; }
+    public string? ApplicationId { get; set; }
+    public AccountDetailsModel Model { get; set; }
+    public List<DocumentModel> RequiredDocs { get; set; }
+    public DocumentModel Selfie { get; set; }
+    private bool PersonalDetailsCaptured { get; set; }
+    private bool ShowForm { get; set; }
+    private bool ViewOnly { get; set; }
+    private bool ApplyingForSomeone { get; set; }
+    private bool IsMinor { get; set; }
+    private bool UserShouldNotApply { get; set; }
+    private bool IsSACitizen { get; set; }
+    public string? IdNumberErrorMsg { get; set; }
+    public string? ApplicationType { get; set; }
+    public bool ReadyForSubmit { get; set; }
+    public bool Submitting { get; set; }
+    public bool ShowProfilePic { get; set; }
+
+    async Task SubmitForm()
+    {
+        Submitting = true;
+        await Task.Delay(200);
+        this.StateHasChanged();
+
+        Model = _application.Save(Model, UserId, ApplicationType);
+        if (Model != null && Model.ErrorMessage == null)
+        {
+            foreach (var item in RequiredDocs)
+            {
+                item.ApplicationId = Model.Id;
+                item.UserId = UserId;
+                item.ViewOnly = true;
+                item.Id = _docServices.Create(item).Id;
+            }
+            ShowProfilePic = true;
+            Selfie = new DocumentModel()
+            {
+                Title = "Selfie",
+                ApplicationId = Model.Id,
+                UserId = UserId,
+                AltId = Guid.NewGuid().ToString(),
+                Profile = true
+            };
+        }
+        Submitting = false;
+
+    }
+
+    void SubmitSelfie()
+    {
+        Selfie = _docServices.Create(Selfie);
+        _nav.NavigateTo("/Application/View/" + Model.Id, true);
+    }
+
+    void SaveProfile(DocumentModel selfie)
+    {
+        if (selfie != null)
+        {
+            Selfie = selfie;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await _provider.GetAuthenticationStateAsync();
+        UserId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (_services.Get(UserId) != null)
+        {
+            AccountSet = true;
+        }
+    }
+
+    void SelectUserType(ChangeEventArgs arg, string UserType)
+    {
+        if (arg != null && UserType != null && arg.Value.ToString() == "on")
+        {
+            ApplyingFor = UserType;
+            GetUserDetails();
+        }
+    }
+
+    void ApplyerIdNumber(ChangeEventArgs arg)
+    {
+        IdNumberErrorMsg = null;
+        if (arg != null && arg.Value != null && arg.Value.ToString().Length == 13)
+        {
+            ShowForm = true;
+            Model.AppliedBy = arg.Value.ToString();
+        }
+        else
+        {
+            ShowForm = false;
+            IdNumberErrorMsg = "Please enter a valid ID number";
+        }
+    }
+
+    void GetModel(AccountDetailsModel model)
+    {
+        PersonalDetailsCaptured = false;
+        Model = model;
+        if (Model != null)
+        {
+            PersonalDetailsCaptured = true;
+            ViewOnly = true;
+            ProcessApplicationModel();
+
+        }
+    }
+
+    void ClearAll()
+    {
+        IsMinor = IsSACitizen = UserShouldNotApply = false;
+    }
+
+    void ProcessApplicationModel()
+    {
+        ClearAll();
+        if (Model != null)
+        {
+            //Determine if applicant is minor
+            if (Model.DateOfBirth != null)
+            {
+                int currentYear = DateTime.Now.Year;
+                int age = currentYear - Model.DateOfBirth.Value.Year;
+                if (age > 15 && age < 19)
+                {
+                    IsMinor = true;
+                }
+                if (age < 16)
+                {
+                    UserShouldNotApply = true;
+                }
+            }
+            if (ApplicationType == "First Time Applicant")
+            {
+
+                if (Model.IsSacitizen == true)
+                {
+                    IsSACitizen = true;
+                }
+                else
+                {
+                    IsSACitizen = false;
+                }
+                if (IsMinor && IsSACitizen)
+                {
+                    RequiredDocs = new List<DocumentModel>()
+            {
+                        new DocumentModel()
+                        {
+                            ApplicationId = ApplicationId,
+                            UserId = UserId,
+                            Title = "Birth Certificate"
+                        },
+                        new DocumentModel()
+                        {
+                            ApplicationId = ApplicationId,
+                            UserId = UserId,
+                            Title = "Proof of Address"
+                        },
+                        new DocumentModel()
+                        {
+                            ApplicationId = ApplicationId,
+                            UserId = UserId,
+                            Title = "Parent Id OR Death Certificate"
+                        }
+                    };
+                }
+                if (!IsMinor && IsSACitizen)
+                {
+                    RequiredDocs = new List<DocumentModel>()
+        {
+                    new DocumentModel()
+                    {
+                        ApplicationId = ApplicationId,
+                        UserId = UserId,
+                        Title = "Birth Certificate / Green Bar-Coded Id"
+                    },
+                    new DocumentModel()
+                    {
+                        ApplicationId = ApplicationId,
+                        UserId = UserId,
+                        Title = "Proof of Address"
+                    }
+                };
+                }
+                if (IsMinor && !IsSACitizen)
+                {
+                    RequiredDocs = new List<DocumentModel>()
+        {
+                    new DocumentModel()
+                    {
+                        ApplicationId = ApplicationId,
+                        UserId = UserId,
+                        Title = "Permanent Residence Certificate"
+                    },
+                    new DocumentModel()
+                    {
+                        ApplicationId = ApplicationId,
+                        UserId = UserId,
+                        Title = "Proof of Address"
+                    },
+                    new DocumentModel()
+                    {
+                        ApplicationId = ApplicationId,
+                        UserId = UserId,
+                        Title = "Parent Id OR Death Certificate"
+                    }
+                };
+                }
+                if (!IsMinor && !IsSACitizen)
+                {
+                    RequiredDocs = new List<DocumentModel>()
+        {
+                    new DocumentModel()
+                    {
+                        ApplicationId = ApplicationId,
+                        UserId = UserId,
+                        Title = "Permanent Residence Certificate"
+                    },
+                    new DocumentModel()
+                    {
+                        ApplicationId = ApplicationId,
+                        UserId = UserId,
+                        Title = "Proof of Address"
+                    }
+                };
+                }
+            }
+            if (ApplicationType == "Re-Issuing")
+            {
+                RequiredDocs = new List<DocumentModel>()
+        {
+                    new DocumentModel()
+                    {
+                        ApplicationId = ApplicationId,
+                        UserId = UserId,
+                        Title = "Upload B1-9 (You should get this form at your nearest Home Affairs)"
+                    },
+                    new DocumentModel()
+                    {
+                        ApplicationId = ApplicationId,
+                        UserId = UserId,
+                        Title = "Proof of payment"
+                    }
+                };
+                if (Model.MaritalStatus == "Married")
+                {
+                    RequiredDocs.Add(new DocumentModel()
+                    {
+                        ApplicationId = ApplicationId,
+                        UserId = UserId,
+                        Title = "Marrige Certificate"
+                    });
+                }
+            }
+        }
+    }
+
+    void GetDocumentFromView(DocumentModel docModel)
+    {
+        ReadyForSubmit = false;
+        if (docModel != null)
+        {
+            var newDoc = RequiredDocs.Where(x => x.AltId == docModel.AltId).FirstOrDefault();
+            RequiredDocs.Remove(RequiredDocs.Where(x => x.AltId == docModel.AltId).FirstOrDefault());
+            RequiredDocs.Add(newDoc);
+        }
+        if (RequiredDocs.Where(x => x.FileName == null).Count() == 0)
+        {
+            ReadyForSubmit = true;
+        }
+    }
+
+    void GetUserDetails()
+    {
+        ClearAll();
+        ApplyingForSomeone = false;
+        ShowForm = false;
+        ViewOnly = false;
+        if (UserId != null)
+        {
+            RequiredDocs = null;
+            if (ApplyingFor == "Someone")
+            {
+                Model = new AccountDetailsModel();
+                ApplyingForSomeone = true;
+            }
+            else
+            {
+                Model = _services.Get(UserId);
+                if (Model == null)
+                {
+                    Model = new AccountDetailsModel();
+                }
+                ShowForm = true;
+            }
+        }
+        else
+        {
+            _nav.NavigateTo("/Identity/Account/Login?returnUrl=/Application/Start", true);
+        }
+    }
+}

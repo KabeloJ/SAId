@@ -1,0 +1,97 @@
+﻿@using Core.Document.Models
+@using Core.Document.Application
+@inject IDocumentServices _services
+
+@if (ErrorMessage != null)
+{
+    <p class="text-danger">@ErrorMessage</p>
+}
+
+@if (DocModel != null)
+{
+    @if (DocModel.FileName == null)
+    {
+        <div class="form-group">
+            <label>@Title</label>
+            <div class="col-md-6">
+                <label for="inputFile" class="form-control">
+                    <div style="border:2px dashed gray; padding: 15px; cursor:pointer" align="center">
+                        Drop or click here
+                    </div>
+                </label>
+            </div>
+            @if (DocModel.Profile == true)
+            {
+                <div hidden>
+                    <InputFile OnChange="UploadFile" id="inputFile" accept="image/x-png,image/jpeg" />
+                </div>
+            }
+            else
+            {
+                <div hidden>
+                    <InputFile OnChange="UploadFile" id="inputFile" />
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="form-group">
+            <label>@Title</label>
+            <br />
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <th align="left"><a href="" class="text-primary">@DocModel.FileName</a></th>
+                            @if (DocModel.ViewOnly == false)
+                            {
+                                <td align="right"><button @onclick="Remove" type="button" class="btn btn-sm btn-outline-danger" title="Delete">Trash</button></td>
+                            }
+                        </tr>
+                    </tbody>
+                </table>               
+            </div>
+            <br />
+        </div>
+    }
+}
+@code {
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public DocumentModel DocModel { get; set; }
+    [Parameter] public EventCallback<DocumentModel> SubmitDocument { get; set; }
+    private string status = "Click or drag here to upload";
+    private string ErrorMessage { get; set; }
+    #region Controls
+    #endregion
+
+    protected override void OnInitialized()
+    {
+
+    }
+
+    async Task Remove()
+    {
+        DocModel.FileName = null;
+        DocModel.MimeType = null;
+        DocModel.Base64String = null;
+        await SubmitDocument.InvokeAsync(DocModel);
+    }
+
+    async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        ErrorMessage = null;
+        if (e.File != null)
+        {
+            DocModel = await _services.UploadFile(e.File, DocModel);
+            if (DocModel != null)
+            {
+                await SubmitDocument.InvokeAsync(DocModel);
+            }
+        }
+        else
+        {
+            ErrorMessage = "Something went wrong trying to upload file";
+        }
+    }
+}
