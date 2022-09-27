@@ -44,5 +44,6 @@ namespace Access.Context
         public string ApplicationStatus { get; set; } = null!;
         public DateTime? ApprovedDate { get; set; }
         public string? ApprovedBy { get; set; }
+        public string? DeclineMessage { get; set; }
     }
 }

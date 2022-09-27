@@ -82,7 +82,7 @@ namespace Application.IdApplication
 
         public List<AccountDetailsModel> GetAll()
         {
-            throw new NotImplementedException();
+            return _data.GetAll();
         }
 
         public List<AccountDetailsModel> GetBySubmitter(string submitterId)
@@ -102,6 +102,18 @@ namespace Application.IdApplication
         public AccountDetailsModel GetById(string applicationId)
         {
             return _data.GetById(applicationId);
+        }
+
+        public AccountDetailsModel Update(AccountDetailsModel model, string action)
+        {
+            if (model != null && model.FormExt != null)
+            {
+                model.FormExt.ApplicationStatus = action;
+                model.FormExt.ApprovedDate = DateTime.Now;
+                model.ApplicationStatus = action;
+               model.Id = _data.Update(model);
+            }
+            return model;
         }
     }
 }

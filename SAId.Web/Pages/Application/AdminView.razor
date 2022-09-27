@@ -1,0 +1,182 @@
+﻿@page "/Application/Admin/View/{Id}"
+@using System.Security.Claims
+@using Core.IdApplication.Application
+@using Core.AccountDetails.Application
+@using Core.AccountDetails.Models
+@using Core.Document.Models
+@using Core.Document.Application
+@using Core.Email.Application
+@inject AuthenticationStateProvider _provider
+@inject IIdApplicationServices _services
+@inject IAccountDetailsServices _user
+@inject IDocumentServices _docs
+@inject IEmailServices _email
+
+
+
+<div>
+    @if (!Loading)
+    {
+        @if (UserModel != null && UserModel.Role == "Admin")
+        {
+
+            @if (Model != null)
+            {
+                <section>
+                    <h5>Application Status : @Model.ApplicationStatus</h5>
+                </section>
+                <div align="center">
+                    @if (DocModels != null)
+                    {
+                        if (DocModels.Where(x => x.Profile == true).Count() > 0)
+                        {
+                            <div class="col-auto">
+                                <img src="/Download/@DocModels.Where(x => x.Profile == true).FirstOrDefault()?.Id" alt="@DocModels.Where(x => x.Profile == true).FirstOrDefault()?.FileName" width="50%" height="50%" />
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <section id="ApplicationForm" class="card p-2 col-md-10">
+                        <SAId.Web.Pages.Partials.Application._Form Model="@Model" UserId="@UserId" ApplyingForSomeone="false" ViewOnly="true" />
+                    </section>
+                    <div class="col-md-1"></div>
+                </div>
+                @if (DocModels != null)
+                {
+                    <div class="row">
+                        <div class="col-md-1"></div>
+                        <section id="Documents" class="card p-2 col-md-10">
+                            <div class="bg-secondary p-2 text-white" style="border-radius:2px">
+                                <h6><b>Documents</b></h6>
+                            </div>
+                            <div class="overflow-auto">
+                                <table class="table table-borderless table-sm small table-striped">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>File Title</th>
+                                            <th>File Name</th>
+                                            <th>Preview</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr></tr>
+                                        @foreach (var doc in DocModels.Where(x => x.Profile == null || x.Profile == false))
+                                        {
+                                            <tr>
+                                                <td>@doc.Title</td>
+                                                <td align="left"><a href="/Download/@doc.Id" class="text-primary" title="Download @doc.FileName">@doc.FileName</a></td>
+                                                <td>
+                                                    <a class="btn btn-sm btn-info text-white" href="/Download/@doc.Id">Download</a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                        <div class="col-md-1"></div>
+                    </div>
+                }
+                @if (Model.FormExt != null && Model.FormExt.ApplicationStatus != "Approved" && Model.FormExt.ApplicationStatus != "Declined")
+                {
+                    <div class="form-group p-2" align="center">
+                        <button class="btn btn-success btn-lg m-2" @onclick="@(()=>Update("Approved"))" title="Approve Application">Approve</button>
+                        <button class="btn btn-danger btn-lg m-2" @onclick="@(()=>Update("Declined"))" title="Decline Application">Decline</button>
+                    </div>
+                }
+                if (Model.ApplicationStatus == "Declined" && Model.DeclineMessage == null)
+                {
+                    <div class="p-2 m-2 shadow-lg">
+                        <div class="form-group">
+                            <label>Decline Reason</label>
+                            @if (DeclineReasonError != null)
+                            {
+                                <p class="text-danger">@DeclineReasonError</p>
+                            }
+                            <textarea class="form-control" @bind="DeclineReason" placeholder="Enter reason for declining.." maxlength="500">
+                            </textarea>
+                        </div>
+                        <div class="mt-2" align="center">
+                            <button type="button" class="btn btn-danger btn-lg" @onclick="DeclineContinue">Decline</button>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p>
+                    There is nothing on this address
+                    <br />
+                    <a href="/" title="Home Page">Go To Home</a>
+                </p>
+            }
+        }
+        else
+        {
+            <p>Not Authorized</p>
+        }
+    }
+    else
+    {
+        <p>Loading...</p>
+    }
+</div>
+
+
+@code {
+    [Parameter] public string Id { get; set; }
+    public string UserId { get; set; }
+    public List<DocumentModel> DocModels { get; set; }
+    public DocumentModel PreviewItem { get; set; }
+    public AccountDetailsModel Model { get; set; }
+    public AccountDetailsModel UserModel { get; set; }
+    public bool Loading { get; set; }
+    public string? DeclineReason { get; set; }
+    public string? DeclineReasonError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loading = true;
+        var auth = await _provider.GetAuthenticationStateAsync();
+        UserId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        Model = _services.GetById(Id);
+        DeclineReason = Model?.DeclineMessage;
+        DocModels = _docs.GetByApplicationId(Id);
+        UserModel = _user.Get(UserId);
+        Loading = false;
+    }
+    async Task DeclineContinue()
+    {
+        DeclineReasonError = null;
+        if (DeclineReason != null)
+        {
+            Model.DeclineMessage = DeclineReason;
+            DeclineReason = null;
+            Model = _services.Update(Model, "Declined");
+            await _email.SendEmail(Model);
+        }
+        else
+        {
+            DeclineReasonError = "Enter reason for declining";
+        }
+    }
+
+    async Task Update(string val)
+    {
+        if (val == "Approved")
+        {
+            Model = _services.Update(Model, val);
+            await _email.SendEmail(Model);
+            this.StateHasChanged();
+        }
+        else
+        {
+            Model.ApplicationStatus = val;
+            Model.FormExt.ApplicationStatus = val;
+            this.StateHasChanged();
+        }
+    }
+
+}

@@ -1,0 +1,95 @@
+﻿@page "/Application/Admin"
+@using Core.IdApplication.Application
+@using Core.AccountDetails.Models
+@using Core.AccountDetails.Application
+@using System.Security.Claims
+@inject AuthenticationStateProvider _provider
+@inject IIdApplicationServices _services
+@inject IAccountDetailsServices _user
+@inject NavigationManager _nav
+@attribute [Authorize]
+
+@if (UserModel != null)
+{
+    if (UserModel.Role == "Admin")
+    {
+        <div class="p-2 m-2">
+            <div>
+                <h4>Applications</h4>
+                <hr />
+            </div>
+            <div class="mb-2">
+                <div class="form-group col-md-4">
+                    <label>Filter By</label>
+                    <select class="form-control form-control-sm" @bind="FilterType">
+                        <option value="Pending" selected>Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Declined">Declined</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="shadow overflow-auto">
+                <table class="table table-responsive">
+                    <thead>
+                        <tr>
+                            <th>Names</th>
+                            <th>Id Number</th>
+                            <th>Application Type</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Models != null)
+                        {
+                            if (Models.Where(x => x.ApplicationStatus == FilterType && x.AppliedBy != UserId).Count() > 0)
+                            {
+                                foreach (var item in Models.Where(x => x.ApplicationStatus == FilterType && x.AppliedBy != UserId))
+                                {
+                                    <tr>
+                                        <td>@item.FirstNames @item.Surname</td>
+                                        <td>@item.IdNumber</td>
+                                        <td>@item.FormExt?.ApplicationType</td>
+                                        <td><button type="button" class="btn btn-sm btn-info text-white" @onclick="@(()=>_nav.NavigateTo($"/Application/Admin/View/{item.Id}", true))">View</button></td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="4" align="center"><strong>No data found</strong></td></tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="4" align="center"><strong>No data found</strong></td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <p>Not authorized</p>
+    }
+}
+
+
+@code {
+    public List<AccountDetailsModel> Models { get; set; }
+    public string UserId { get; set; }
+    public bool Loading { get; set; }
+    private AccountDetailsModel UserModel { get; set; }
+
+    public string? FilterType { get; set; } = "Pending";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loading = true;
+        var auth = await _provider.GetAuthenticationStateAsync();
+        UserId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        Models = _services.GetAll();
+        UserModel = _user.Get(UserId);
+        Loading = false;
+    }
+}

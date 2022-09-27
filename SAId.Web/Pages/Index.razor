@@ -1,9 +1,11 @@
 ﻿@page "/"
 @using System.Security.Claims
 @using Core.AccountDetails.Application
+@using Core.AccountDetails.Models
 @inject AuthenticationStateProvider _provider
 @inject IAccountDetailsServices _services
 @inject NavigationManager _nav
+
 
 <div class="m-4">
     @if (UserId != null)
@@ -15,27 +17,38 @@
             </div>
         }
     }
-        <div class="row">
-            <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" @onclick="@(()=>_nav.NavigateTo("/Application/Start", true))">
-                <h4>Apply For Smart Id</h4>
-            </button>
-            @if (UserId != null)
+    <div class="row">
+        <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" @onclick="@(()=>_nav.NavigateTo("/Application/Start", true))">
+            <h4>Apply For Smart Id</h4>
+        </button>
+        @if (UserId != null && model != null)
+        {
+            @if (model.Role == "Admin")
+            {
+                <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" @onclick="@(()=>_nav.NavigateTo("/Application/Admin", true))">
+                    <h4>View Applications</h4>
+                </button>
+            }
+            else
             {
                 <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" @onclick="@(()=>_nav.NavigateTo("/Application/History", true))">
                     <h4>View Applications History</h4>
                 </button>
             }
-        </div>
+        }
+    </div>
 </div>
 @code{
     public string? UserId { get; set; }
     public bool AccountSet { get; set; }
+    public AccountDetailsModel model { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         var auth = await _provider.GetAuthenticationStateAsync();
         UserId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (_services.Get(UserId) != null)
+        model = _services.Get(UserId);
+        if (model != null)
         {
             AccountSet = true;
         }

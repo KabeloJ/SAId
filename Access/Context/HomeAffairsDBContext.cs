@@ -155,6 +155,10 @@ namespace Access.Context
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
+                entity.Property(e => e.Role)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.Surname)
                     .HasMaxLength(200)
                     .IsUnicode(false);
@@ -203,6 +207,10 @@ namespace Access.Context
                     .IsUnicode(false);
 
                 entity.Property(e => e.DateOfBirth).HasColumnType("date");
+
+                entity.Property(e => e.DeclineMessage)
+                    .HasMaxLength(500)
+                    .IsUnicode(false);
 
                 entity.Property(e => e.EmailAddress)
                     .HasMaxLength(100)

@@ -68,8 +68,10 @@ namespace Core.AccountDetails.Models
         public string AppliedBy { get; set; } = null!;
         public string ApplicationStatus { get; set; } = null!;
         public string? ErrorMessage { get; set; }
+        public string? Role { get; set; }
 
         public FormExt FormExt { get; set; }
+        public string? DeclineMessage { get; set; }
 
         void PopulateNationalities()
         {

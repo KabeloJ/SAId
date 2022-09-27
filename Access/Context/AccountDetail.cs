@@ -39,5 +39,6 @@ namespace Access.Context
         public string? PostalSuburb { get; set; }
         public bool? IsSacitizen { get; set; }
         public string? AppliedBy { get; set; }
+        public string? Role { get; set; }
     }
 }

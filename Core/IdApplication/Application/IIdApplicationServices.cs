@@ -9,6 +9,7 @@ namespace Core.IdApplication.Application
 {
     public interface IIdApplicationServices
     {
+        AccountDetailsModel Update(AccountDetailsModel model, string action);
         AccountDetailsModel GetById(string applicationId);
         AccountDetailsModel Save(AccountDetailsModel model, string userId, string applicationType);
         AccountDetailsModel SaveForLater(AccountDetailsModel model, string userId, string applicationType);
