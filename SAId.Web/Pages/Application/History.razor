@@ -23,6 +23,7 @@
                             <th>Names</th>
                             <th>Id Number</th>
                             <th>Application Type</th>
+                            <th>Status</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -35,7 +36,17 @@
                                     <td>@item.FirstNames @item.Surname</td>
                                     <td>@item.IdNumber</td>
                                     <td>@item.FormExt?.ApplicationType</td>
-                                    <td><button type="button" class="btn btn-sm btn-info text-white" @onclick="@(()=>_nav.NavigateTo($"/Application/View/{item.Id}", true))">View</button></td>
+                                    <td>@item.FormExt?.ApplicationStatus</td>
+                                    <td>
+                                        @if (Navigating)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-info text-white" disabled>View</button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-info text-white" @onclick="@(()=>Navigate($"/Application/View/{item.Id}"))">View</button>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         }
@@ -66,5 +77,19 @@
         Models = _services.GetBySubmitter(UserId);
         UserModel = _user.Get(UserId);
         Loading = false;
+    }
+    #region
+    bool Navigating { get; set; }
+    bool Filtering { get; set; }
+    async Task Wait()
+    {
+        await Task.Delay(500);
+        this.StateHasChanged();
+    }
+    #endregion
+    async Task Navigate(string to)
+    {
+        Navigating = true;
+        _nav.NavigateTo(to, true);
     }
 }

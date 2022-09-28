@@ -43,7 +43,7 @@
                 <table class="table table-borderless">
                     <tbody>
                         <tr>
-                            <th align="left"><a href="" class="text-primary">@DocModel.FileName</a></th>
+                            <th align="left"><label class="text-primary">@DocModel.FileName</label></th>
                             @if (DocModel.ViewOnly == false)
                             {
                                 <td align="right"><button @onclick="Remove" type="button" class="btn btn-sm btn-outline-danger" title="Delete">Trash</button></td>

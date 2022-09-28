@@ -9,68 +9,88 @@
 @inject NavigationManager _nav
 @attribute [Authorize]
 
-@if (UserModel != null)
+@if (Loading)
 {
-    if (UserModel.Role == "Admin")
-    {
-        <div class="p-2 m-2">
-            <div>
-                <h4>Applications</h4>
-                <hr />
-            </div>
-            <div class="mb-2">
-                <div class="form-group col-md-4">
-                    <label>Filter By</label>
-                    <select class="form-control form-control-sm" @bind="FilterType">
-                        <option value="Pending" selected>Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Declined">Declined</option>
-                    </select>
-                </div>
-            </div>
+    <div align="center"><img src="loading.gif" width="40"/>
+    <p>Loading</p></div>
+}
+else
+{
 
-            <div class="shadow overflow-auto">
-                <table class="table table-responsive">
-                    <thead>
-                        <tr>
-                            <th>Names</th>
-                            <th>Id Number</th>
-                            <th>Application Type</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Models != null)
-                        {
-                            if (Models.Where(x => x.ApplicationStatus == FilterType && x.AppliedBy != UserId).Count() > 0)
+    @if (UserModel != null)
+    {
+        if (UserModel.Role == "Admin")
+        {
+            <div class="p-2 m-2">
+                <div>
+                    <h4>Applications</h4>
+                    <hr />
+                </div>
+                <div class="mb-2">
+                    <div class="form-group col-md-4">
+                        <label>Filter By</label>
+                        <select class="form-control form-control-sm" @onchange="Filter">
+                            <option value="Pending" selected>Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Declined">Declined</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="shadow overflow-auto">
+                    <table class="table table-responsive">
+                        <thead>
+                            <tr>
+                                <th>Names</th>
+                                <th>Id Number</th>
+                                <th>Application Type</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Models != null)
                             {
-                                foreach (var item in Models.Where(x => x.ApplicationStatus == FilterType && x.AppliedBy != UserId))
+                                @if (Filtering)
                                 {
-                                    <tr>
-                                        <td>@item.FirstNames @item.Surname</td>
-                                        <td>@item.IdNumber</td>
-                                        <td>@item.FormExt?.ApplicationType</td>
-                                        <td><button type="button" class="btn btn-sm btn-info text-white" @onclick="@(()=>_nav.NavigateTo($"/Application/Admin/View/{item.Id}", true))">View</button></td>
-                                    </tr>
+
+                                    <tr><td colspan="4" align="center">Applying Filter<img src="loading.gif" width="40" /></td></tr>
+                                }
+                                else
+                                {
+
+                                    if (Models.Where(x => x.ApplicationStatus == FilterType && x.AppliedBy != UserId).Count() > 0)
+                                    {
+                                        foreach (var item in Models.Where(x => x.ApplicationStatus == FilterType && x.AppliedBy != UserId))
+                                        {
+                                            <tr>
+                                                <td>@item.FirstNames @item.Surname</td>
+                                                <td>@item.IdNumber</td>
+                                                <td>@item.FormExt?.ApplicationType</td>
+                                                <td>@item.FormExt?.ApplicationStatus</td>
+                                                <td><button type="button" class="btn btn-sm btn-info text-white" @onclick="@(() => Navigate($"/Application/Admin/View/{item.Id}"))">View</button></td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr><td colspan="4" align="center"><strong>No data found</strong></td></tr>
+                                    }
                                 }
                             }
                             else
                             {
                                 <tr><td colspan="4" align="center"><strong>No data found</strong></td></tr>
                             }
-                        }
-                        else
-                        {
-                            <tr><td colspan="4" align="center"><strong>No data found</strong></td></tr>
-                        }
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    }
-    else
-    {
-        <p>Not authorized</p>
+        }
+        else
+        {
+            <p>Not authorized</p>
+        }
     }
 }
 
@@ -86,10 +106,34 @@
     protected override async Task OnInitializedAsync()
     {
         Loading = true;
+        await Task.Delay(1000);
+        this.StateHasChanged();
         var auth = await _provider.GetAuthenticationStateAsync();
         UserId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
         Models = _services.GetAll();
         UserModel = _user.Get(UserId);
         Loading = false;
+    }
+    async Task Filter(ChangeEventArgs a)
+    {
+        Filtering = true;
+        await Wait();
+        FilterType = a.Value.ToString();
+        Filtering = false;
+        this.StateHasChanged();
+    }
+    #region
+    bool Navigating { get; set; }
+    bool Filtering { get; set; }
+    async Task Wait()
+    {
+        await Task.Delay(500);
+        this.StateHasChanged();
+    }
+    #endregion
+    async Task Navigate(string to)
+    {
+        Navigating = true;
+        _nav.NavigateTo(to, true);
     }
 }
