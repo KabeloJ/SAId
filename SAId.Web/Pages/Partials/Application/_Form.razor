@@ -279,8 +279,23 @@
                                 <label>Are you a South African Citizen?</label>
                                 <br />
                                 <ValidationMessage For="@(()=>Model.IsSacitizen)" />
-                                <input type="radio" @onchange="@(a=>EmployeeCitizen(a, "Yes"))" name="Citizen" id="yes" /><label for="yes">&nbsp;Yes</label>
-                                <input type="radio" @onchange="@(a=>EmployeeCitizen(a, "No"))" name="Citizen" id="no" /><label for="no">&nbsp;No</label>
+                                @if (Model.IsSacitizen == true)
+                                {
+                                    <input type="radio" @onchange="@(a=>EmployeeCitizen(a, "Yes"))" checked name="Citizen" id="yes" /><label for="yes">&nbsp;&nbsp;Yes</label>
+                                }
+                                else
+                                {
+
+                                    <input type="radio" @onchange="@(a=>EmployeeCitizen(a, "Yes"))" name="Citizen" id="yes" /><label for="yes">&nbsp;&nbsp;Yes</label>
+                                }
+                                @if (Model.IsSacitizen == false)
+                                {
+                                    <input type="radio" @onchange="@(a=>EmployeeCitizen(a, "No"))" checked name="Citizen" id="no" /><label for="no">&nbsp;&nbsp;No</label>
+                                }
+                                else
+                                {
+                                    <input type="radio" @onchange="@(a=>EmployeeCitizen(a, "No"))" name="Citizen" id="no" /><label for="no">&nbsp;&nbsp;No</label>
+                                }
                             </div>
                             @if (Model.Nationality == "South African")
                             {

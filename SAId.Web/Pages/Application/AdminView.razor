@@ -24,6 +24,13 @@
             {
                 <section>
                     <h5>Application Status : @Model.ApplicationStatus</h5>
+                    @if (Model.DeclineMessage != null && Model.ApplicationStatus == "Declined")
+                    {
+                        <div class="card p-2 m-2 border-danger">
+                            <label class="text-black-50">Decline Reason</label>
+                            <p>@Model.DeclineMessage</p>
+                        </div>
+                    }
                 </section>
                 <div align="center">
                     @if (DocModels != null)
@@ -82,8 +89,16 @@
                 @if (Model.FormExt != null && Model.FormExt.ApplicationStatus != "Approved" && Model.FormExt.ApplicationStatus != "Declined")
                 {
                     <div class="form-group p-2" align="center">
-                        <button class="btn btn-success btn-lg m-2" @onclick="@(()=>Update("Approved"))" title="Approve Application">Approve</button>
-                        <button class="btn btn-danger btn-lg m-2" @onclick="@(()=>Update("Declined"))" title="Decline Application">Decline</button>
+                        @if (Approving)
+                        {
+                            <button class="btn btn-success btn-lg m-2" disabled>Approving...</button>
+                            <button class="btn btn-danger btn-lg m-2" disabled>Decline</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-success btn-lg m-2" @onclick="@(()=>Update("Approved"))" title="Approve Application">Approve</button>
+                            <button class="btn btn-danger btn-lg m-2" @onclick="@(()=>Update("Declined"))" title="Decline Application">Decline</button>
+                        }
                     </div>
                 }
                 if (Model.ApplicationStatus == "Declined" && Model.DeclineMessage == null)
@@ -99,7 +114,16 @@
                             </textarea>
                         </div>
                         <div class="mt-2" align="center">
-                            <button type="button" class="btn btn-danger btn-lg" @onclick="DeclineContinue">Decline</button>
+                            @if (Declining)
+                            {
+
+                                <button type="button" class="btn btn-danger btn-lg" disabled>Declining</button>
+                            }
+                            else
+                            {
+
+                                <button type="button" class="btn btn-danger btn-lg" @onclick="DeclineContinue">Decline</button>
+                            }
                         </div>
                     </div>
                 }
@@ -133,6 +157,8 @@
     public AccountDetailsModel Model { get; set; }
     public AccountDetailsModel UserModel { get; set; }
     public bool Loading { get; set; }
+    public bool Approving { get; set; }
+    public bool Declining { get; set; }
     public string? DeclineReason { get; set; }
     public string? DeclineReasonError { get; set; }
 
@@ -149,6 +175,9 @@
     }
     async Task DeclineContinue()
     {
+        Declining = true;
+        await Task.Delay(500);
+        this.StateHasChanged();
         DeclineReasonError = null;
         if (DeclineReason != null)
         {
@@ -161,14 +190,20 @@
         {
             DeclineReasonError = "Enter reason for declining";
         }
+        Declining = false;
+        this.StateHasChanged();
     }
 
     async Task Update(string val)
     {
         if (val == "Approved")
         {
+            Approving = true;
+            await Task.Delay(500);
+            this.StateHasChanged();
             Model = _services.Update(Model, val);
             await _email.SendEmail(Model);
+            Approving = false;
             this.StateHasChanged();
         }
         else

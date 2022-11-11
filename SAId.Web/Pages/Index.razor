@@ -17,31 +17,68 @@
             </div>
         }
     }
-    <div class="row">
-        <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" @onclick="@(()=>_nav.NavigateTo("/Application/Start", true))">
-            <h4>Apply For Smart Id</h4>
+<div class="row">
+    @if (Navigating)
+    {
+        <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" disabled>
+            <h4 class="text-uppercase">Apply For Smart Id</h4>
         </button>
-        @if (UserId != null && model != null)
+    }
+    else
+    {
+        <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" @onclick="@(()=>Navigate("/Application/Start"))">
+            <h4 class="text-uppercase">Apply For Smart Id</h4>
+        </button>
+    }
+    @if (UserId != null && model != null)
+    {
+        @if (model.Role == "Admin")
         {
-            @if (model.Role == "Admin")
+            @if (Navigating)
             {
-                <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" @onclick="@(()=>_nav.NavigateTo("/Application/Admin", true))">
-                    <h4>View Applications</h4>
+                <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" disabled>
+                    <h4 class="text-uppercase">View Applications</h4>
                 </button>
             }
             else
             {
-                <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" @onclick="@(()=>_nav.NavigateTo("/Application/History", true))">
-                    <h4>View Applications History</h4>
+                <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" @onclick="@(()=>Navigate("/Application/Admin"))">
+                    <h4 class="text-uppercase">View Applications</h4>
                 </button>
             }
         }
-    </div>
+        else
+        {
+            if (Navigating)
+            {
+
+                <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" disabled>
+                    <h4 class="text-uppercase">View Applications History</h4>
+                </button>
+            }
+            else
+            {
+                <button class="bg-secondary text-white p-4 m-2 col-md-5 btn" @onclick="@(()=>Navigate("/Application/History"))">
+                    <h4 class="text-uppercase">View Applications History</h4>
+                </button>
+            }
+        }
+    }
+</div>
 </div>
 @code{
     public string? UserId { get; set; }
     public bool AccountSet { get; set; }
     public AccountDetailsModel model { get; set; }
+
+    #region
+    bool Navigating { get; set; }
+    async Task Wait()
+    {
+        await Task.Delay(200);
+        this.StateHasChanged();
+    }
+    #endregion
 
     protected override async Task OnInitializedAsync()
     {
@@ -52,5 +89,13 @@
         {
             AccountSet = true;
         }
+    }
+    async void Navigate(string to)
+    {
+        Navigating = true;
+        await Wait();
+        _nav.NavigateTo(to, true);
+        Navigating = false;
+
     }
 }

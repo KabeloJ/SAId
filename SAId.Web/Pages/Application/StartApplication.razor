@@ -23,10 +23,10 @@
         {
             <div class="row col-md-8">
                 <div class="form-group col-md-5 m-2">
-                    <button type="button" class="btn btn-lg btn-success form-control" @onclick="@(()=>ApplicationType = "First Time Applicant")">First Time Applicant</button>
+                    <button type="button" class="btn btn-lg btn-success form-control" @onclick="@(()=>ApplicationTypeSelect("First Time Applicant"))">First Time Applicant</button>
                 </div>
                 <div class="form-group col-md-5 m-2">
-                    <button type="button" class="btn btn-lg btn-info text-white form-control" @onclick="@(()=>ApplicationType = "Re-Issuing")">Re-Issuing</button>
+                    <button type="button" class="btn btn-lg btn-info text-white form-control" @onclick="@(()=>ApplicationTypeSelect("Re-Issuing"))">Re-Issuing</button>
                 </div>
             </div>
         }
@@ -37,104 +37,115 @@
             </div>
         }
     </section>
-    @if (ApplicationType != null)
+    @if (Loading)
     {
-        <section id="ApplyingFor">
-            <h5>Who are you applying for?</h5>
-            <div class="row col-md-8">
-                <div class="form-group col-md-6">
-                    <input type="radio" name="ApplyingFor" id="MySelf" @onchange="@(a=>SelectUserType(a, "MySelf"))" /><label for="MySelf">&nbsp;For Myself</label>
-                </div>
-                <div class="form-group col-md-6">
-                    <input type="radio" name="ApplyingFor" id="Someone" @onchange="@(a=>SelectUserType(a ,"Someone"))" /><label for="Someone">&nbsp;For Someone</label>
-                </div>
-            </div>
-            @if (ApplyingFor == "Someone")
-            {
-                <div class="form-group col-md-4 mt-4">
-                    <label>Id Number</label>
-                    <br />
-                    @if (IdNumberErrorMsg != null)
-                    {
-                        <span class="text-danger">@IdNumberErrorMsg</span>
-                    }
-                    <input type="text" @onchange="ApplyerIdNumber" class="form-control" placeholder="Please enter your ID number" />
-                </div>
-            }
-        </section>
-        @if (ShowForm == true && Model != null)
-        {
-            <div class="row">
-                <div class="col-md-1"></div>
-                <section id="ApplicationForm" class="card p-2 col-md-10">
-                    <SAId.Web.Pages.Partials.Application._Form Model="@Model" SubmitForm="GetModel" BtnName="Submit Form" UserId="@UserId" ApplyingForSomeone="@ApplyingForSomeone" ViewOnly="@ViewOnly" />
-                </section>
-                <div class="col-md-1"></div>
-            </div>
-            @if (UserShouldNotApply)
-            {
-                <h5 class="text-danger">Unfortunately, you can only apply when you are 16 years or older.</h5>
-                <button type="button" class="btn btn-sm btn-primary" @onclick="@(()=>_nav.NavigateTo("/", true))">Abandon Application</button>
-            }
-            else
-            {
+        <div align="center">
+            <p>Loading <img src="loading.gif" alt="Loading..." width="40"/></p>
+        </div>
+    }
+    else
+    {
 
-                @if (PersonalDetailsCaptured && RequiredDocs != null)
+        @if (ApplicationType != null)
+        {
+            <section id="ApplyingFor">
+                <h5>Who are you applying for?</h5>
+                <div class="row col-md-8">
+                    <div class="form-group col-md-6">
+                        <input type="radio" name="ApplyingFor" id="MySelf" @onchange="@(a=>SelectUserType(a, "MySelf"))" /><label for="MySelf">&nbsp;For Myself</label>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <input type="radio" name="ApplyingFor" id="Someone" @onchange="@(a=>SelectUserType(a ,"Someone"))" /><label for="Someone">&nbsp;For Someone</label>
+                    </div>
+                </div>
+                @if (ApplyingFor == "Someone")
                 {
-                    <div class="row mt-2">
-                        <div class="col-md-1"></div>
-                        <section id="Documents" class="card p-2 col-md-10">
-                            <div class="bg-secondary p-2 text-white" style="border-radius:2px">
-                                <h6><b>Documents</b></h6>
-                            </div>
-                            @foreach (var doc in RequiredDocs)
-                            {
-                                <SAId.Web.Pages.Partials.Application._Document DocModel="@doc" Title="@doc.Title" SubmitDocument="GetDocumentFromView" />
-                            }
-                        </section>
-                        <div class="col-md-1"></div>
+                    <div class="form-group col-md-4 mt-4">
+                        <label>Id Number</label>
+                        <br />
+                        @if (IdNumberErrorMsg != null)
+                        {
+                            <span class="text-danger">@IdNumberErrorMsg</span>
+                        }
+                        <input type="text" @onchange="ApplyerIdNumber" class="form-control" placeholder="Please enter your ID number" />
                     </div>
                 }
-            }
-        }
-        @if (ShowProfilePic && Selfie != null)
-        {
-                    <div class="row mt-2">
-                        <div class="col-md-1"></div>
-                        <section class="card p-2 col-md-10">
-                            <div class="bg-secondary p-2 text-white" style="border-radius:2px">
-                                <h6><b>Id Photo</b></h6>
-                            </div>
-                            <SAId.Web.Pages.Partials.Application._Document DocModel="@Selfie" Title="@Selfie.Title" SubmitDocument="SaveProfile" />
-                            @if (Selfie.FileName != null)
-                            {
-                                <div class="form-group mt-2">
-                                    <button type="button" class="btn btn-primary form-control" @onclick="SubmitSelfie">Submit</button>
-                                </div>
-                            }
-                        </section>
-                        <div class="col-md-1"></div>
-                    </div>
-        }
-    }
-    @if (ReadyForSubmit && Model != null && Model.Id == null)
-    {
-        <br />
-        @if (Model.ErrorMessage != null)
-        {
-            <p class="text-danger">@Model.ErrorMessage</p>
-        }
-        <div class="form-group">
-            @if (Submitting)
+            </section>
+            @if (ShowForm == true && Model != null)
             {
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <section id="ApplicationForm" class="card p-2 col-md-10">
+                        <SAId.Web.Pages.Partials.Application._Form Model="@Model" SubmitForm="GetModel" BtnName="Submit Form" UserId="@UserId" ApplyingForSomeone="@ApplyingForSomeone" ViewOnly="@ViewOnly" />
+                    </section>
+                    <div class="col-md-1"></div>
+                </div>
+                @if (UserShouldNotApply)
+                {
+                    <h5 class="text-danger">Unfortunately, you can only apply when you are 16 years or older.</h5>
+                    <button type="button" class="btn btn-sm btn-primary" @onclick="@(()=>_nav.NavigateTo("/", true))">Abandon Application</button>
+                }
+                else
+                {
 
-                <button type="button" class="btn btn-primary form-control" disabled>Sending Application...</button>
+                    @if (PersonalDetailsCaptured && RequiredDocs != null)
+                    {
+                        <div class="row mt-2">
+                            <div class="col-md-1"></div>
+                            <section id="Documents" class="card p-2 col-md-10">
+                                <div class="bg-secondary p-2 text-white" style="border-radius:2px">
+                                    <h6><b>Documents</b></h6>
+                                </div>
+                                @foreach (var doc in RequiredDocs)
+                                {
+                                    <SAId.Web.Pages.Partials.Application._Document DocModel="@doc" Title="@doc.Title" SubmitDocument="GetDocumentFromView" />
+                                }
+                            </section>
+                            <div class="col-md-1"></div>
+                        </div>
+                    }
+                }
             }
-            else
+            @if (ShowProfilePic && Selfie != null)
             {
-                <button type="button" class="btn btn-primary form-control" @onclick="SubmitForm">Send Application</button>
+                        <div class="row mt-2">
+                            <div class="col-md-1"></div>
+                            <section class="card p-2 col-md-10">
+                                <div class="bg-secondary p-2 text-white" style="border-radius:2px">
+                                    <h6><b>Id Photo</b></h6>
+                                </div>
+                                <SAId.Web.Pages.Partials.Application._Document DocModel="@Selfie" Title="@Selfie.Title" SubmitDocument="SaveProfile" />
+                                @if (Selfie.FileName != null)
+                                {
+                                    <div class="form-group mt-2">
+                                        <button type="button" class="btn btn-primary form-control" @onclick="SubmitSelfie">Submit</button>
+                                    </div>
+                                }
+                            </section>
+                            <div class="col-md-1"></div>
+                        </div>
             }
-        </div>
+        }
+        @if (ReadyForSubmit && Model != null && Model.Id == null)
+        {
+            <br />
+            @if (Model.ErrorMessage != null)
+            {
+                <p class="text-danger">@Model.ErrorMessage</p>
+            }
+            <div class="form-group">
+                @if (Submitting)
+                {
+
+                    <button type="button" class="btn btn-primary form-control" disabled>Sending Application...</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-primary form-control" @onclick="SubmitForm">Send Application</button>
+                }
+            </div>
+        }
+
     }
 </div>
 
@@ -149,6 +160,7 @@
     private bool PersonalDetailsCaptured { get; set; }
     private bool ShowForm { get; set; }
     private bool ViewOnly { get; set; }
+    private bool Loading { get; set; }
     private bool ApplyingForSomeone { get; set; }
     private bool IsMinor { get; set; }
     private bool UserShouldNotApply { get; set; }
@@ -158,6 +170,15 @@
     public bool ReadyForSubmit { get; set; }
     public bool Submitting { get; set; }
     public bool ShowProfilePic { get; set; }
+
+    #region
+    bool Navigating { get; set; }
+    async Task Wait()
+    {
+        await Task.Delay(200);
+        this.StateHasChanged();
+    }
+    #endregion
 
     async Task SubmitForm()
     {
@@ -413,6 +434,15 @@
         {
             ReadyForSubmit = true;
         }
+    }
+
+    async Task ApplicationTypeSelect(string val)
+    {
+        ApplicationType = val;
+        Loading = true;
+        await Wait();
+        Loading = false;
+        this.StateHasChanged();
     }
 
     void GetUserDetails()
