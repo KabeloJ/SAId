@@ -9,6 +9,7 @@ namespace Core.Email.Application
 {
     public interface IEmailServices
     {
+        Task ForgotPassword(string to, string subject, string body);
         Task SendEmail(AccountDetailsModel model);
     }
 }

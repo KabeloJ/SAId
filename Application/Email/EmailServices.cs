@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Net.Mail;
 using System.Net;
 using Core.AccountDetails.Models;
+using System.Diagnostics.SymbolStore;
 
 namespace Application.Email
 {
@@ -17,6 +18,15 @@ namespace Application.Email
         public EmailServices(IAccountDetailsServices accountDetailsServices)
         {
             _accountDetailsServices = accountDetailsServices;
+        }
+        public async Task ForgotPassword(string to, string subject, string body)
+        {
+            string message = System.IO.File.ReadAllText("wwwroot\\EmailTemplate.txt");
+
+            message = message.Replace("{message}", body);
+            message = message.Replace("{targetUser}", to);
+            await SendAsync(to, subject, message);
+
         }
         public async Task SendEmail(AccountDetailsModel model)
         {
@@ -103,6 +113,7 @@ namespace Application.Email
                 await SendAsync(EmailAddress, subject, body);
             }
         }
+
         async Task SendAsync(string to, string subject, string body)
         {
             using (SmtpClient client = LoadSmtp())
@@ -130,34 +141,5 @@ namespace Application.Email
             };
             return client;
         }
-
-        /*
-        async Task SendAsync(string to, string subject, string body)
-        {
-            var smtp = new SmtpClient
-            {
-                Host = SmtpSettings.Host,
-                Port = SmtpSettings.Port,
-                EnableSsl = SmtpSettings.SSL,
-                Credentials = new NetworkCredential(SmtpSettings.Address, SmtpSettings.Password)
-            };
-            try
-            {
-
-                using (var message = new MailMessage(SmtpSettings.Address, "kabelojones0@gmail.com")
-                {
-                    Subject = subject,
-                    Body = System.Web.HttpUtility.HtmlDecode(body)
-                })
-                {
-                    smtp.Send(message);
-                }
-            }
-            catch (Exception e)
-            {
-
-            }
-        }
-*/
     }
 }
