@@ -1,4 +1,4 @@
-﻿@page "/Application/Admin/View/{Id}"
+﻿@page "/Application/Admin/View/{Id}/{pdf?}"
 @using System.Security.Claims
 @using Core.IdApplication.Application
 @using Core.AccountDetails.Application
@@ -11,6 +11,7 @@
 @inject IAccountDetailsServices _user
 @inject IDocumentServices _docs
 @inject IEmailServices _email
+@inject IJSRuntime _js
 
 
 
@@ -151,6 +152,7 @@
 
 @code {
     [Parameter] public string Id { get; set; }
+    [Parameter] public string? Pdf { get; set; }
     public string UserId { get; set; }
     public List<DocumentModel> DocModels { get; set; }
     public DocumentModel PreviewItem { get; set; }
@@ -172,6 +174,17 @@
         DocModels = _docs.GetByApplicationId(Id);
         UserModel = _user.Get(UserId);
         Loading = false;
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+            if (Pdf == "pdf")
+            {
+                await _js.InvokeVoidAsync("ConvertToPDF");
+            }
+        }
     }
     async Task DeclineContinue()
     {

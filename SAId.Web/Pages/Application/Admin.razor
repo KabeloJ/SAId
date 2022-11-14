@@ -7,6 +7,7 @@
 @inject IIdApplicationServices _services
 @inject IAccountDetailsServices _user
 @inject NavigationManager _nav
+@inject IJSRuntime _js
 @attribute [Authorize]
 
 @if (Loading)
@@ -26,19 +27,9 @@ else
                     <h4>Applications</h4>
                     <hr />
                 </div>
-                <div class="mb-2">
-                    <div class="form-group col-md-4">
-                        <label>Filter By</label>
-                        <select class="form-control form-control-sm" @onchange="Filter">
-                            <option value="Pending" selected>Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Declined">Declined</option>
-                        </select>
-                    </div>
-                </div>
 
-                <div class="shadow overflow-auto">
-                    <table class="table table-responsive">
+                <div class="shadow overflow-auto p-2">
+                    <table id="example" class="table table-responsive">
                         <thead>
                             <tr>
                                 <th>Names</th>
@@ -51,36 +42,20 @@ else
                         <tbody>
                             @if (Models != null)
                             {
-                                @if (Filtering)
+                                foreach (var item in Models.Where(x=>x.AppliedBy != UserId))
                                 {
-
-                                    <tr><td colspan="4" align="center">Applying Filter<img src="loading.gif" width="40" /></td></tr>
+                                    <tr>
+                                        <td>@item.FirstNames @item.Surname</td>
+                                        <td>@item.IdNumber</td>
+                                        <td>@item.FormExt?.ApplicationType</td>
+                                        <td>@item.FormExt?.ApplicationStatus</td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-info text-white" @onclick="@(() => Navigate($"/Application/Admin/View/{item.Id}"))">View</button>
+                                            |
+                                            <button type="button" class="btn btn-sm btn-secondary text-white"  @onclick="@(() => Navigate($"/Application/Admin/View/{item.Id}/pdf"))">Download</button>
+                                        </td>
+                                    </tr>
                                 }
-                                else
-                                {
-
-                                    if (Models.Where(x => x.ApplicationStatus == FilterType && x.AppliedBy != UserId).Count() > 0)
-                                    {
-                                        foreach (var item in Models.Where(x => x.ApplicationStatus == FilterType && x.AppliedBy != UserId))
-                                        {
-                                            <tr>
-                                                <td>@item.FirstNames @item.Surname</td>
-                                                <td>@item.IdNumber</td>
-                                                <td>@item.FormExt?.ApplicationType</td>
-                                                <td>@item.FormExt?.ApplicationStatus</td>
-                                                <td><button type="button" class="btn btn-sm btn-info text-white" @onclick="@(() => Navigate($"/Application/Admin/View/{item.Id}"))">View</button></td>
-                                            </tr>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <tr><td colspan="4" align="center"><strong>No data found</strong></td></tr>
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                <tr><td colspan="4" align="center"><strong>No data found</strong></td></tr>
                             }
                         </tbody>
                     </table>
@@ -113,6 +88,10 @@ else
         Models = _services.GetAll();
         UserModel = _user.Get(UserId);
         Loading = false;
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await _js.InvokeVoidAsync("TestDataTablesAdd", "#example");
     }
     async Task Filter(ChangeEventArgs a)
     {
