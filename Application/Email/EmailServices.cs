@@ -144,7 +144,7 @@ namespace Application.Email
             try
             {
 
-                using (var message = new MailMessage(SmtpSettings.Address, "kabelojones0@gmail.com")
+                using (var message = new MailMessage(SmtpSettings.Address, "someone@domain.com")
                 {
                     Subject = subject,
                     Body = System.Web.HttpUtility.HtmlDecode(body)
